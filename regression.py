@@ -20,9 +20,6 @@ st.write(
 # ==========================================
 # LOAD DATA
 # ==========================================
-@st.cache_data
-def load_data(path):
-    return pd.read_csv(path)
 
 df = pd.read_csv(r"C:\Users\Ripple\Desktop\PROJECT\PROJECT 2/Car_Price_Prediction.csv")
 st.subheader("Dataset Preview")
