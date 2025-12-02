@@ -17,12 +17,11 @@ st.write(
     "This app performs EDA and builds a Linear Regression model to predict car prices."
 )
 
+
 # ==========================================
 # LOAD DATA
 # ==========================================
-@st.cache_data
-def load_data(path):
-    return pd.read_csv(path)
+
 
 df = pd.read_csv(r"C:\Users\Ripple\Desktop\PROJECT\PROJECT 2/Car_Price_Prediction.csv")
 st.subheader("Dataset Preview")
@@ -128,4 +127,3 @@ new_df_encoded = new_df_encoded[X.columns]
 predicted_price = pipeline.predict(new_df_encoded)[0]
 
 st.write(f"### Predicted Price: **${predicted_price:.2f}**")
-
