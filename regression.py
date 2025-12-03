@@ -12,18 +12,16 @@ from sklearn.metrics import mean_squared_error, r2_score
 # ==========================================
 # STREAMLIT PAGE TITLE
 # ==========================================
-st.title(" Car Price Prediction App")
+st.title("Car Price Prediction App")
 st.write(
     "This app performs EDA and builds a Linear Regression model to predict car prices."
 )
 
-
 # ==========================================
 # LOAD DATA
 # ==========================================
+df = pd.read_csv("Car_Price_Prediction.csv")
 
-
-df = pd.read_csv(r"C:\Users\Ripple\Desktop\PROJECT\PROJECT 2/Car_Price_Prediction.csv")
 st.subheader("Dataset Preview")
 st.dataframe(df.head())
 
@@ -37,7 +35,7 @@ df[cat_cols] = df[cat_cols].astype("category")
 df[num_cols] = df[num_cols].apply(pd.to_numeric)
 
 # ==========================================
-# EDA: PLOTS
+# EDA PLOTS
 # ==========================================
 st.subheader("Exploratory Data Analysis")
 
@@ -46,7 +44,6 @@ st.write("### Year vs Price by Make")
 fig1, ax1 = plt.subplots(figsize=(10, 6))
 sns.scatterplot(data=df, x="Year", y="Price", hue="Make", ax=ax1)
 ax1.set_xticklabels(ax1.get_xticks(), rotation=45)
-plt.tight_layout()
 st.pyplot(fig1)
 
 # Boxplot
@@ -54,14 +51,12 @@ st.write("### Price Distribution by Fuel Type")
 fig2, ax2 = plt.subplots(figsize=(10, 6))
 sns.boxplot(data=df, x="Fuel Type", y="Price", ax=ax2)
 ax2.set_xticklabels(ax2.get_xticks(), rotation=45)
-plt.tight_layout()
 st.pyplot(fig2)
 
 # Heatmap
 st.write("### Correlation Heatmap")
 fig3, ax3 = plt.subplots(figsize=(8, 6))
 sns.heatmap(df[num_cols].corr(), annot=True, cmap="coolwarm", ax=ax3)
-plt.tight_layout()
 st.pyplot(fig3)
 
 # ==========================================
@@ -86,7 +81,7 @@ pipeline = Pipeline([("scaler", StandardScaler()), ("model", LinearRegression())
 pipeline.fit(X_train, y_train)
 
 # ==========================================
-# MODEL PERFORMANCE OUTPUT
+# MODEL PERFORMANCE
 # ==========================================
 st.subheader("Model Performance")
 y_pred = pipeline.predict(X_test)
@@ -98,32 +93,34 @@ st.write(f"**RMSE:** {rmse:.2f}")
 st.write(f"**R2 Score:** {r2:.2f}")
 
 # ==========================================
-# SAFE NEW CAR PREDICTION
+# 🔥 DYNAMIC USER INPUT FOR PREDICTION
 # ==========================================
-st.subheader("Predict Price for a New Car")
+st.subheader("🔮 Predict Price for a New Car")
 
-new_car = {
-    "Year": 2020,
-    "Engine Size": 2.0,
-    "Mileage": 15000,
-    "Make": "Toyota",
-    "Model": "Corolla",
-    "Fuel Type": "Petrol",
-    "Transmission": "Automatic",
-}
+user_input = {}
 
-new_df = pd.DataFrame([new_car])
+st.write("### Enter Car Details")
 
-# One-hot encode new input
-new_df_encoded = pd.get_dummies(new_df, drop_first=True)
+for col in df.columns:
+    if col == "Price":
+        continue
 
-# Match training columns
-for col in X.columns:
-    if col not in new_df_encoded.columns:
-        new_df_encoded[col] = 0
+    if df[col].dtype.name == "category":
+        user_input[col] = st.selectbox(f"{col}", df[col].cat.categories)
+    else:
+        default_val = float(df[col].mean())
+        user_input[col] = st.number_input(f"{col}", value=default_val)
 
-new_df_encoded = new_df_encoded[X.columns]
+# Convert dict → DataFrame
+input_df = pd.DataFrame([user_input])
 
-predicted_price = pipeline.predict(new_df_encoded)[0]
+# One-hot encode input
+input_encoded = pd.get_dummies(input_df, drop_first=True)
 
-st.write(f"### Predicted Price: **${predicted_price:.2f}**")
+# Align with training columns
+input_encoded = input_encoded.reindex(columns=X.columns, fill_value=0)
+
+# Prediction
+if st.button("Predict Car Price"):
+    predicted_price = pipeline.predict(input_encoded)[0]
+    st.success(f"### Predicted Price: **${predicted_price:,.2f}**")
